@@ -1,0 +1,11 @@
+{
+  "name": "Guess Who?",
+  "short_name": "Guess Who",
+  "description": "The 2-player mystery face game — no login, no backend needed.",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0d1b2a",
+  "background_color": "#0d1b2a",
+  "icons": []
+}

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0d1b2a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self'; img-src 'self' data:; base-uri 'self'; form-action 'none';">
+  <title>Guess Who?</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Confetti canvas — drawn over everything on win -->
+  <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 1 · Title / Start
+  ══════════════════════════════════════ -->
+  <div id="screen-start" class="screen active">
+    <div class="start-inner">
+
+      <div class="logo">
+        <div class="logo-icon">🎭</div>
+        <h1 class="logo-title">Guess Who?</h1>
+        <p class="logo-sub">The 2-player mystery face game</p>
+      </div>
+
+      <div class="how-to-card">
+        <h2 class="how-to-title">How to Play</h2>
+        <ol class="how-to-list">
+          <li>Both players open this page on their <strong>own device</strong>.</li>
+          <li>Each secretly picks one character — don't show the other player!</li>
+          <li>Take turns asking <strong>yes / no questions</strong> out loud.</li>
+          <li>Eliminate characters that can't be the answer.</li>
+          <li>When you're ready — hit <strong>Guess!</strong> to win.</li>
+        </ol>
+      </div>
+
+      <button id="btn-start" class="btn btn-primary btn-lg">Start Game</button>
+      <!-- Resume button injected here by JS if a saved game exists -->
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 2 · Secret Character Pick
+  ══════════════════════════════════════ -->
+  <div id="screen-pick" class="screen">
+
+    <header class="pick-header">
+      <h2 class="pick-title">Pick Your Secret Character</h2>
+      <p class="pick-sub">Choose wisely — this is who the other player must guess!</p>
+    </header>
+
+    <div id="pick-grid" class="char-grid pick-mode"></div>
+
+    <footer class="pick-footer">
+      <p class="pick-hint">Tap a character to select them. You can change your mind before confirming.</p>
+    </footer>
+
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 3 · Main Game Board
+  ══════════════════════════════════════ -->
+  <div id="screen-game" class="screen">
+
+    <!-- Top bar -->
+    <header class="game-header">
+      <div class="game-header-left">
+        <button id="btn-reset"  class="btn btn-ghost btn-sm" title="Reset game">↩ Reset</button>
+        <button id="btn-helper" class="btn btn-ghost btn-sm" title="Question helper">💡 Helper</button>
+      </div>
+      <h1 class="game-title">Guess Who?</h1>
+      <button id="btn-guess" class="btn btn-primary btn-sm">🎯 Guess!</button>
+    </header>
+
+    <!-- Secret character badge -->
+    <div class="secret-strip">
+      <span class="secret-label">Your character:</span>
+      <div class="secret-badge-wrap">
+        <div id="my-char-badge" class="secret-badge concealed">
+          <div id="my-char-face" class="char-face badge-face"></div>
+          <span id="my-char-name" class="badge-name"></span>
+        </div>
+        <button id="btn-peek" class="btn-peek" aria-label="Hold to reveal your secret character">
+          <span class="peek-icon">👁</span>
+          <span class="peek-label">Hold to Peek</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Turn toggle + optional timer -->
+    <div class="turn-strip">
+      <span class="turn-label">Turn:</span>
+      <div class="turn-toggle">
+        <button id="btn-turn-me"   class="turn-btn active" data-turn="me"   aria-pressed="true">🙋 My turn to ask</button>
+        <button id="btn-turn-them" class="turn-btn"        data-turn="them" aria-pressed="false">🙋 Their turn to ask</button>
+      </div>
+      <div class="turn-timer-wrap">
+        <div id="turn-timer" class="turn-timer" hidden>
+          <span id="timer-display" class="timer-display">30</span><span class="timer-s">s</span>
+        </div>
+        <button id="btn-timer-toggle" class="btn-timer-toggle" title="Toggle 30-second turn timer" aria-label="Toggle 30-second turn timer">⏱</button>
+      </div>
+    </div>
+
+    <!-- Question helper panel (collapsible) -->
+    <div id="helper-panel" class="helper-panel" hidden>
+      <div class="helper-header">
+        <span class="helper-title">💡 Best Question to Ask</span>
+        <button id="btn-helper-close" class="helper-close" aria-label="Close helper">✕</button>
+      </div>
+      <div id="helper-content" class="helper-content">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Trait filter toolbar -->
+    <div id="filter-bar" class="filter-bar" role="toolbar" aria-label="Filter characters by trait">
+      <button class="filter-btn active" data-filter="all"          aria-pressed="true">All</button>
+      <button class="filter-btn" data-filter="glasses"             aria-pressed="false">👓 Glasses</button>
+      <button class="filter-btn" data-filter="hat"                 aria-pressed="false">🎩 Hat</button>
+      <button class="filter-btn" data-filter="facialHair"          aria-pressed="false">🧔 Facial Hair</button>
+      <button class="filter-btn" data-filter="age-young"           aria-pressed="false">🧒 Young</button>
+      <button class="filter-btn" data-filter="age-old"             aria-pressed="false">👴 Old</button>
+      <button class="filter-btn" data-filter="gender-female"       aria-pressed="false">👩 Female</button>
+      <button class="filter-btn" data-filter="hair-blonde"         aria-pressed="false">💛 Blonde</button>
+      <button class="filter-btn" data-filter="hair-long"           aria-pressed="false">💇 Long Hair</button>
+      <button class="filter-btn" data-filter="earrings"            aria-pressed="false">💎 Earrings</button>
+      <button class="filter-btn" data-filter="freckles"            aria-pressed="false">🟤 Freckles</button>
+    </div>
+
+    <!-- 24-character elimination board -->
+    <div id="game-grid" class="char-grid game-mode"></div>
+
+    <!-- Status footer -->
+    <footer class="game-footer">
+      <div class="elim-count" role="status" aria-live="polite" aria-atomic="true">
+        <span class="count-badge elim-badge"><span id="elim-num">0</span> out</span>
+        <span class="count-divider">·</span>
+        <span class="count-badge remain-badge"><span id="remain-num">24</span> left</span>
+      </div>
+      <div class="footer-actions">
+        <button id="btn-clear" class="btn btn-ghost btn-sm" disabled>🗑 Clear</button>
+        <button id="btn-undo"  class="btn btn-ghost btn-sm" disabled>↩ Undo</button>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ══════════════════════════════════════
+       MODAL · Make a Guess
+  ══════════════════════════════════════ -->
+  <div id="modal-guess" class="modal-overlay" hidden>
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="guess-modal-title">
+
+      <button id="btn-close-guess" class="modal-close" aria-label="Close modal">✕</button>
+
+      <h2 id="guess-modal-title" class="modal-title">🎯 Make Your Guess</h2>
+      <p class="modal-subtitle">Who is the other player's secret character?</p>
+
+      <input
+        type="text"
+        id="guess-search"
+        class="guess-search"
+        placeholder="Search by name…"
+        autocomplete="off"
+        spellcheck="false"
+      />
+
+      <div id="guess-grid" class="guess-grid"></div>
+
+      <div id="guess-preview" class="guess-preview" hidden>
+        <div id="guess-preview-face" class="char-face guess-face"></div>
+        <span id="guess-preview-name" class="guess-preview-name"></span>
+      </div>
+
+      <div class="modal-actions">
+        <button id="btn-cancel-guess"  class="btn btn-ghost">Cancel</button>
+        <button id="btn-confirm-guess" class="btn btn-primary" disabled>Confirm Guess →</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       MODAL · Result (Win / Lose)
+  ══════════════════════════════════════ -->
+  <div id="modal-result" class="modal-overlay" hidden>
+    <div class="modal-box modal-result-box" role="dialog" aria-modal="true" aria-labelledby="result-title">
+
+      <div id="result-emoji" class="result-emoji"></div>
+      <h2 id="result-title" class="result-title"></h2>
+      <p  id="result-subtitle" class="result-subtitle"></p>
+
+      <div class="result-cards">
+        <div class="result-card">
+          <span class="result-card-label">Your character</span>
+          <div id="result-my-face" class="char-face result-face"></div>
+          <span id="result-my-name" class="result-char-name"></span>
+        </div>
+        <div class="result-vs">vs</div>
+        <div class="result-card">
+          <span class="result-card-label">You guessed</span>
+          <div id="result-guess-face" class="char-face result-face"></div>
+          <span id="result-guess-name" class="result-char-name"></span>
+        </div>
+      </div>
+
+      <div id="result-actions" class="modal-actions"></div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       CHARACTER DATA
+  ══════════════════════════════════════ -->
+  <script>
+    window.CHARACTERS = [
+      { id: 1,  name: "Alice",   hairStyle: "curly", hairColor: "#f0e68c", facialHair: false,      glasses: false, hat: false, earrings: true,  freckles: false, age: "young",  gender: "female",    skin: "#f5cba7", eye: "#3498db", job: "Artist",       trait: "Creative" },
+      { id: 2,  name: "Bob",     hairStyle: "curly", hairColor: "#6b4226", facialHair: "beard",    glasses: false, hat: true,  earrings: false, freckles: false, age: "middle", gender: "male",      skin: "#e8b89a", eye: "#7d5a3c", job: "Chef",         trait: "Friendly" },
+      { id: 3,  name: "Carlos",  hairStyle: "short", hairColor: "#1a1a1a", facialHair: "mustache", glasses: false, hat: true,  earrings: false, freckles: false, age: "young",  gender: "male",      skin: "#c68642", eye: "#3d2b1f", job: "Musician",     trait: "Cool" },
+      { id: 4,  name: "Diana",   hairStyle: "long",  hairColor: "#c0392b", facialHair: false,      glasses: true,  hat: false, earrings: true,  freckles: false, age: "middle", gender: "female",    skin: "#ffe0bd", eye: "#27ae60", job: "Doctor",       trait: "Caring" },
+      { id: 5,  name: "Eve",     hairStyle: "short", hairColor: "#95a5a6", facialHair: false,      glasses: false, hat: true,  earrings: false, freckles: false, age: "old",    gender: "female",    skin: "#f5cba7", eye: "#7f8c8d", job: "Teacher",      trait: "Wise" },
+      { id: 6,  name: "Frank",   hairStyle: "bald",  hairColor: null,      facialHair: "beard",    glasses: true,  hat: false, earrings: false, freckles: false, age: "old",    gender: "male",      skin: "#d4a574", eye: "#2c3e50", job: "Engineer",     trait: "Reliable" },
+      { id: 7,  name: "Grace",   hairStyle: "long",  hairColor: "#8b5e3c", facialHair: false,      glasses: true,  hat: false, earrings: false, freckles: true,  age: "young",  gender: "female",    skin: "#ffe0bd", eye: "#16a085", job: "Student",      trait: "Curious" },
+      { id: 8,  name: "Henry",   hairStyle: "short", hairColor: "#f0e68c", facialHair: false,      glasses: false, hat: true,  earrings: false, freckles: true,  age: "young",  gender: "male",      skin: "#f5cba7", eye: "#2980b9", job: "Athlete",      trait: "Energetic" },
+      { id: 9,  name: "Iris",    hairStyle: "long",  hairColor: "#0d0d0d", facialHair: false,      glasses: false, hat: false, earrings: true,  freckles: false, age: "middle", gender: "female",    skin: "#b5703a", eye: "#8e44ad", job: "Writer",       trait: "Mysterious" },
+      { id: 10, name: "Jake",    hairStyle: "short", hairColor: "#e74c3c", facialHair: "beard",    glasses: false, hat: false, earrings: false, freckles: true,  age: "young",  gender: "male",      skin: "#ffe0bd", eye: "#1abc9c", job: "Traveler",     trait: "Adventurous" },
+      { id: 11, name: "Karen",   hairStyle: "curly", hairColor: "#f4d03f", facialHair: false,      glasses: true,  hat: true,  earrings: true,  freckles: false, age: "middle", gender: "female",    skin: "#f5cba7", eye: "#e67e22", job: "Lawyer",       trait: "Confident" },
+      { id: 12, name: "Leo",     hairStyle: "bald",  hairColor: null,      facialHair: "mustache", glasses: false, hat: false, earrings: false, freckles: false, age: "old",    gender: "male",      skin: "#d4a574", eye: "#7d5a3c", job: "Retired",      trait: "Calm" },
+      { id: 13, name: "Maria",   hairStyle: "curly", hairColor: "#1a1a1a", facialHair: false,      glasses: true,  hat: false, earrings: true,  freckles: false, age: "young",  gender: "female",    skin: "#c68642", eye: "#2ecc71", job: "Scientist",    trait: "Smart" },
+      { id: 14, name: "Nathan",  hairStyle: "short", hairColor: "#bdc3c7", facialHair: false,      glasses: true,  hat: true,  earrings: false, freckles: false, age: "old",    gender: "male",      skin: "#e8b89a", eye: "#2c3e50", job: "Professor",    trait: "Thoughtful" },
+      { id: 15, name: "Olivia",  hairStyle: "long",  hairColor: "#e74c3c", facialHair: false,      glasses: false, hat: false, earrings: false, freckles: true,  age: "young",  gender: "female",    skin: "#ffe0bd", eye: "#3498db", job: "Dancer",       trait: "Joyful" },
+      { id: 16, name: "Peter",   hairStyle: "short", hairColor: "#7d5a3c", facialHair: "beard",    glasses: true,  hat: false, earrings: false, freckles: false, age: "middle", gender: "male",      skin: "#f5cba7", eye: "#2c3e50", job: "Journalist",   trait: "Inquisitive" },
+      { id: 17, name: "Quinn",   hairStyle: "short", hairColor: "#f0e68c", facialHair: false,      glasses: true,  hat: false, earrings: true,  freckles: false, age: "young",  gender: "nonbinary", skin: "#ffe0bd", eye: "#9b59b6", job: "Designer",     trait: "Artistic" },
+      { id: 18, name: "Rosa",    hairStyle: "curly", hairColor: "#95a5a6", facialHair: false,      glasses: false, hat: true,  earrings: true,  freckles: false, age: "old",    gender: "female",    skin: "#c68642", eye: "#e67e22", job: "Gardener",     trait: "Nurturing" },
+      { id: 19, name: "Sam",     hairStyle: "short", hairColor: "#1a1a1a", facialHair: "mustache", glasses: true,  hat: false, earrings: false, freckles: false, age: "middle", gender: "male",      skin: "#b5703a", eye: "#2980b9", job: "Accountant",   trait: "Detail-oriented" },
+      { id: 20, name: "Tina",    hairStyle: "long",  hairColor: "#f4d03f", facialHair: false,      glasses: false, hat: true,  earrings: false, freckles: true,  age: "young",  gender: "female",    skin: "#f5cba7", eye: "#e91e63", job: "Influencer",   trait: "Cheerful" },
+      { id: 21, name: "Uma",     hairStyle: "curly", hairColor: "#8b5e3c", facialHair: false,      glasses: true,  hat: false, earrings: true,  freckles: false, age: "middle", gender: "female",    skin: "#e8b89a", eye: "#27ae60", job: "Therapist",    trait: "Empathetic" },
+      { id: 22, name: "Victor",  hairStyle: "short", hairColor: "#0d0d0d", facialHair: "beard",    glasses: false, hat: true,  earrings: false, freckles: false, age: "old",    gender: "male",      skin: "#8d5524", eye: "#c0392b", job: "Captain",      trait: "Bold" },
+      { id: 23, name: "Wendy",   hairStyle: "long",  hairColor: "#bdc3c7", facialHair: false,      glasses: true,  hat: false, earrings: false, freckles: true,  age: "middle", gender: "female",    skin: "#ffe0bd", eye: "#16a085", job: "Architect",    trait: "Precise" },
+      { id: 24, name: "Xavier",  hairStyle: "bald",  hairColor: null,      facialHair: false,      glasses: true,  hat: false, earrings: false, freckles: false, age: "old",    gender: "male",      skin: "#6b4226", eye: "#7f8c8d", job: "Philosopher",  trait: "Wise" },
+    ];
+  </script>
+
+  <script src="script.js"></script>
+</body>
+</html>
