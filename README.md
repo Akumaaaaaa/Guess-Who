@@ -6,9 +6,11 @@
 
 ## 🕹️ Play It
 
-Open `index.html` in any modern browser. That's it. No install, no server, no account.
+**Live demo → [guess-who-mal.vercel.app](https://guess-who-mal.vercel.app)**
 
-Both players open the same file on their **own device**, keep their secret character hidden, and take turns asking yes/no questions out loud.
+Or open `index.html` locally in any modern browser. No install, no server, no account.
+
+Both players open the same URL on their **own device**, keep their secret character hidden, and take turns asking yes/no questions out loud.
 
 ---
 
@@ -131,10 +133,14 @@ Click **💡 Helper** in the game header to open it. It updates live as you elim
 
 ## 🚀 Deploy
 
+Live at **[guess-who-mal.vercel.app](https://guess-who-mal.vercel.app)** — deployed via Vercel.
+
 Since it's just static files, you can host it anywhere:
 
 ```bash
-# GitHub Pages — just push to main and enable Pages in repo settings
+# Vercel (recommended) — connect the repo and it deploys automatically
+
+# GitHub Pages — push to main and enable Pages in repo settings
 
 # Or serve locally with any static server:
 npx serve .
