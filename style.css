@@ -1059,6 +1059,8 @@ input  { font-family: inherit; }
   .logo-icon     { font-size: 52px; }
   .start-inner   { gap: 16px; }
   .how-to-card   { padding: 16px 18px; }
+  .how-to-list li { font-size: 0.78rem; }
+  .how-to-list li::before { width: 19px; height: 19px; font-size: 0.62rem; }
   #btn-start     { width: 100%; }
   .resume-btn    { width: 100%; }
 
@@ -1075,12 +1077,12 @@ input  { font-family: inherit; }
   .modal-box     { padding: 20px 14px 16px; }
   .guess-grid    { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
   .modal-title   { font-size: 1.2rem; }
-  /* Turn strip: wrap buttons so both are fully readable */
-  .turn-strip    { flex-wrap: wrap; row-gap: 5px; padding: 6px 10px; }
+  /* Turn strip: single row — buttons shrink, timer stays inline */
+  .turn-strip    { flex-wrap: nowrap; padding: 6px 10px; }
   .turn-label    { display: none; }
-  .turn-toggle   { flex: 1; min-width: 100%; }
-  .turn-btn      { flex: 1; justify-content: center; }
-  .turn-timer-wrap { margin-left: auto; }
+  .turn-toggle   { flex: 1; min-width: 0; }
+  .turn-btn      { flex: 1; justify-content: center; padding: 5px 7px; font-size: 0.68rem; }
+  .turn-timer-wrap { flex-shrink: 0; margin-left: 4px; }
 }
 @media (max-width: 360px) {
   .char-grid    { gap: 5px; padding: 7px 8px; }
